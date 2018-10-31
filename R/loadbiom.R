@@ -34,7 +34,7 @@ makeMicrobiomeExperimentFromBiom <- function(obj) {
     feature_data <- observation_metadata(obj)
 
     MicrobiomeExperiment(assays=list(counts=counts), colData=sample_data,
-                         rowData=MicrobiomeFeatures(taxa=feature_data))
+                         rowData=TreeIndex(feature_data))
 }
 
 

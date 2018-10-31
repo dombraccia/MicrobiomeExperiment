@@ -1,14 +1,23 @@
 context("MicrobiomeExperiment subset methods")
 
 test_that("[ subsetting works", {
-    ## TODO: add toy example for testing here
-    counts <- matrix(rbinom(20, 5, .5), ncol = 4)
-    rowData <- DataFrame()
+    library(metagenomeSeq)
+    library(data.table)
+    library(S4Vectors)
+    data(mouseData)
+    counts <- MRcounts(mouseData)
+
+    rowData <- TreeIndex(fData(mouseData))
     me <- MicrobiomeExperiment(SimpleList(counts = counts), rowData = rowData)
 
-    expect_identical(me[], me)
-    expect_identical(me[,], me)
-    expect_identical(me[TRUE, ], me)
-    expect_identical(me[, TRUE], me)
-    expect_identical(me[TRUE, TRUE], me)
+    # subset rows and columns
+    subset_me <- MbExp[1:100,1:5]
+
+    expect_true(is(subset_me, "MicrobiomeExperiment"))
+    expect_equal(nrow(subset_me), 100)
+    expect_equal(ncol(subset_me), 5)
+    expect_equal(nrow(subset_me@rowData@.hierarchy), 100)
+    expect_equal(nrow(subset_me@colData), 5)
+    expect_equal(nrow(assays(subset_me)$counts), 100)
+    expect_equal(ncol(assays(subset_me)$counts), 5)
 })

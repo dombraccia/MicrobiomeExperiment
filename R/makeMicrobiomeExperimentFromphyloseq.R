@@ -25,13 +25,12 @@ makeMicrobiomeExperimentFromphyloseq <- function(object) {
     }else{
         tree <- NULL
     }
-    mf <- MicrobiomeFeatures(taxa=taxa, tree=tree)
-    if (!is.null(object@refseq)) {
-        mf@refDbSeq <- object@refseq
-    }
-output <- MicrobiomeExperiment(
+
+    tree <- TreeIndex(taxa)
+
+    output <- MicrobiomeExperiment(
         assays = SimpleList(counts = object@otu_table@.Data),
-        rowData = mf
+        rowData = tree
     )
     if(!is.null(object@sam_data)){
         colData(output) <- DataFrame(data.frame(object@sam_data))

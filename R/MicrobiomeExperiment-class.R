@@ -1,12 +1,8 @@
 ## Class constructor
 .MicrobiomeExperiment <- setClass("MicrobiomeExperiment",
-    contains="SummarizedExperiment",
-    representation(
-        rowData="MicrobiomeFeatures"
-    )
-)
+                                  contains = "SummarizedExperiment",
+                                  representation(rowData = "TreeIndex"))
 
-#'
 #' The MicrobiomeExperiment representation class
 #'
 #' SummarizedExperiment-like class for microbiome data. rowData is
@@ -16,8 +12,7 @@
 #'
 #' It supports (most) of the interface to phyloseq objects
 #'
-#' @include MicrobiomeFeatures-class.R
-#' @importClassesFrom metagenomeFeatures mgFeatures
+#' @include TreeIndex-class.R
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 #' @examples
@@ -38,18 +33,60 @@
 #' @aliases MicrobiomeExperiment-class
 #' @export
 MicrobiomeExperiment <- function(assays = SimpleList(),
-    rowData = MicrobiomeFeatures(), ...) {
-
-    if (is.data.frame(rowData) || is(rowData, "DataFrame"))
-        rowData <- as(rowData, "MicrobiomeFeatures")
+                                 rowData = TreeIndex(),
+                                 ...) {
+    if (is.data.frame(rowData))
+        rowData <- TreeIndex(rowData)
 
     SummarizedExperiment <-
         if (!is(assays, "SummarizedExperiment"))
             SummarizedExperiment(assays = assays, ...)
-        else
-            assays
+    else
+        assays
 
     .MicrobiomeExperiment(SummarizedExperiment, rowData = rowData)
 }
 
+#' @importFrom methods callNextMethod
+#' @importFrom SummarizedExperiment assays rowData colData
+#  @importFrom BiocGenerics normalize
+#' @importFrom S4Vectors metadata
+#' @export
+setMethod("[", signature(x = "MicrobiomeExperiment"),
+          function(x, i, j) {
+              obj <- callNextMethod()
+              counts <- assays(x)$counts
 
+              if (!missing(i)) {
+                  i <- as.vector(i)
+                  rowData <- x@rowData[i, ]
+                  counts <- counts[i, ]
+              }
+
+              if (!missing(j)) {
+                  j <- as.vector(j)
+                  colData <- x@colData[j, ]
+                  counts <- counts[, j]
+              }
+
+              MicrobiomeExperiment(SimpleList(counts = counts), rowData = rowData)
+          })
+
+#' @export
+setMethod("rowData", signature("MicrobiomeExperiment"),
+          function(x) {
+              x@rowData
+          })
+
+#' @export
+setMethod("show", signature("MicrobiomeExperiment"),
+          function(object) {
+              cat("class: MicrobiomeExperiment \n", sep=" ")
+              cat("dim:", nrow(object), ncol(object), "\n", sep=" ")
+              cat("metadata:\n")
+              cat(show(metadata(object)))
+              cat("rowData:\n")
+              cat(show(rowData(object)), "\n")
+              cat("colData:\n")
+              cat(show(colData(object)))
+          })

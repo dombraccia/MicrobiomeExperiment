@@ -15,7 +15,7 @@ makeMicrobiomeExperimentFromMRexperiment <- function(obj) {
     feature_data <- fData(obj)
 
     MicrobiomeExperiment(assays=list(counts=counts), colData=sample_data,
-                         rowData=MicrobiomeFeatures(taxa=feature_data))
+                         rowData=TreeIndex(feature_data))
 }
 
 setAs(from="MRexperiment", to="MicrobiomeExperiment", function(from) {
