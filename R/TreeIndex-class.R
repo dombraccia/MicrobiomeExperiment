@@ -220,6 +220,7 @@ TreeIndex <- function(hierarchy = NULL, feature_order = NULL){
     )
 }
 
+#' @export
 setMethod("[", "TreeIndex",
           function(x, i, j, ..., drop = FALSE) {
               sHierarchy <- x@.hierarchy[i, j, ..., drop=drop]
@@ -240,8 +241,11 @@ setMethod("[", "TreeIndex",
           }
 )
 
+#' @export
 setGeneric("getNodes", signature = "x",
            function(x, ...) standardGeneric("getNodes"))
+
+#' @export
 setMethod("getNodes", "TreeIndex",
           function(x, selectedLevel=3, start=1, end=1000) {
               nodes_at_level <- x@nodes_table[level==selectedLevel, ]
@@ -249,17 +253,23 @@ setMethod("getNodes", "TreeIndex",
               unique(data.frame(ids=nodes_at_level_ids, names=nodes_at_level$node_label))
           })
 
+#' @export
 setGeneric("getNodeStates", signature = "x",
            function(x, ...) standardGeneric("getNodeStates"))
+
+#' @export
 setMethod("getNodeStates", "TreeIndex",
           function(x) {
               return(list("removed"=0, "expanded"=1, "aggregate"=2))
           })
 
+#' @export
 setGeneric("getIndices", signature = "x",
            function(x, ...) standardGeneric("getIndices"))
+
+#' @export
 setMethod("getIndices", "TreeIndex",
-          function(x, selectedLevel=3, selectedNodes=NULL, start=1, end=1000) {
+          function(x, selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="list") {
               nodes_at_level <- x@nodes_table[level==selectedLevel, ]
               nodes_at_level_ids <- nodes_at_level[,id]
 
@@ -304,7 +314,21 @@ setMethod("getIndices", "TreeIndex",
               leaf_indices$otu_index.y <- NULL
               leaf_indices$node_label.y <- NULL
               colnames(leaf_indices) <- c("leaf", "otu_index", "id", "parent", "lineage", "node_label", "level", "order")
-              leaf_indices
+
+              if(format == "aggTable") {
+                  return(leaf_indices)
+              }
+              else if(format == "dataframe"){
+                  groups <- leaf_indices[, .(indices=paste0(otu_index, collapse=","), leaf_nodes=paste0(leaf, collapse=",")), by=.(id, parent, lineage, node_label, level, order)]
+                  return(groups)
+              }
+              else if(format == "list") {
+                  groups <- leaf_indices[, .(indices=paste0(otu_index, collapse=","), leaf_nodes=paste0(leaf, collapse=",")), by=.(id, parent, lineage, node_label, level, order)]
+                  nodes <- as.list(groups$indices)
+                  names(nodes) <- groups$node_label
+                  return(nodes)
+              }
+              return(leaf_indices)
           }
 )
 
@@ -315,6 +339,7 @@ setAs("DataFrame", "TreeIndex", function(from) {
 
 #' @keywords internal
 #' @importFrom methods callNextMethod
+#' @export
 setMethod("show", "TreeIndex", function(object) {
     cat(
         "Tree Index",

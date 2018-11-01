@@ -90,3 +90,26 @@ setMethod("show", signature("MicrobiomeExperiment"),
               cat("colData:\n")
               cat(show(colData(object)))
           })
+
+#' @export
+setGeneric("aggregateAt", signature = "x",
+           function(x, ...) standardGeneric("aggregateAt"))
+
+#' @export
+setMethod("aggregateAt", "MicrobiomeExperiment",
+          function(x, samples=NULL, selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="list") {
+
+              if(is.null(samples)) {
+                  samples <- colnames(x)
+              }
+
+              getNodeIndices <- getIndices(rowData(x), selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="aggTable")
+              counts_dt <- as.data.table(assays(x)$counts[,samples])
+              counts_dt$otu_index <- 1:nrow(counts_dt)
+              merge_dt <- merge(getNodeIndices, counts_dt, by="otu_index")
+              merge_dt <- merge_dt[, leaf:=NULL]
+              merge_dt <- merge_dt[, otu_index:=NULL]
+              agg <- merge_dt[, lapply(.SD, sum), by=c("id", "parent", "lineage", "node_label", "level", "order")]
+
+              return(agg)
+          })

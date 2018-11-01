@@ -11,7 +11,6 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     SummarizedExperiment,
-    metagenomeFeatures,
     data.table,
     digest,
     S4Vectors
@@ -24,7 +23,6 @@ Collate:
     'TreeIndex-class.R'
     'MicrobiomeExperiment-class.R'
     'MicrobiomeExperiment.R'
-    'MicrobiomeFeatures-class.R'
     'loadbiom.R'
     'makeMicrobiomeExperimentFromMRexperiment.R'
     'makeMicrobiomeExperimentFromphyloseq.R'
