@@ -318,6 +318,11 @@ setMethod("getIndices", "TreeIndex",
               if(format == "aggTable") {
                   return(leaf_indices)
               }
+              else if(format == "TreeIndex"){
+                tHierarchy <- unique(x@.hierarchy[leaf_indices$otu_index, x@feature_order[1:selectedLevel]])
+                newTreeIndex <- TreeIndex(hierarchy=tHierarchy, feature_order = x@feature_order[1:selectedLevel])
+                return(newTreeIndex)
+              }
               else if(format == "dataframe"){
                   groups <- leaf_indices[, .(indices=paste0(otu_index, collapse=","), leaf_nodes=paste0(leaf, collapse=",")), by=.(id, parent, lineage, node_label, level, order)]
                   return(groups)
@@ -333,7 +338,6 @@ setMethod("getIndices", "TreeIndex",
 )
 
 setAs("DataFrame", "TreeIndex", function(from) {
-    ## TODO: add coercion method for DataFrame to TreeIndex
     from@.hierarchy
 })
 

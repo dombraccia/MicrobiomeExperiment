@@ -57,7 +57,7 @@ setMethod("[", signature(x = "MicrobiomeExperiment"),
               obj <- callNextMethod()
               counts <- assays(x)$counts
 
-              if (!missing(i)) {
+              if (!missing(i)) {getIndices
                   i <- as.vector(i)
                   rowData <- x@rowData[i, ]
                   counts <- counts[i, ]
@@ -97,19 +97,30 @@ setGeneric("aggregateAt", signature = "x",
 
 #' @export
 setMethod("aggregateAt", "MicrobiomeExperiment",
-          function(x, samples=NULL, selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="list") {
+          function(x, samples=NULL, selectedLevel=3, selectedNodes=NULL, aggFun=colSums, start=1, end=1000, format="MicrobiomeExperiment") {
 
               if(is.null(samples)) {
                   samples <- colnames(x)
               }
 
-              getNodeIndices <- getIndices(rowData(x), selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="aggTable")
-              counts_dt <- as.data.table(assays(x)$counts[,samples])
-              counts_dt$otu_index <- 1:nrow(counts_dt)
-              merge_dt <- merge(getNodeIndices, counts_dt, by="otu_index")
-              merge_dt <- merge_dt[, leaf:=NULL]
-              merge_dt <- merge_dt[, otu_index:=NULL]
-              agg <- merge_dt[, lapply(.SD, sum), by=c("id", "parent", "lineage", "node_label", "level", "order")]
+              groups <- getIndices(rowData(x), selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="list")
+              counts <-  assays(x)$counts
 
-              return(agg)
+              newMat <- array(NA,dim=c(length(groups), ncol(x)))
+              for(i in seq_along(groups)) {
+                  indices <- as.integer(strsplit(groups[[i]], ",")[[1]])
+                  newMat[i,] = aggFun(counts[indices,])
+              }
+
+              rownames(newMat) <- names(groups)
+              colnames(newMat) <- colnames(x)
+
+
+              if(format == "MicrobiomeExperiment") {
+                subtree <- getIndices(rowData(x), selectedLevel=3, selectedNodes=NULL, start=1, end=1000, format="TreeIndex")
+                return(MicrobiomeExperiment(SimpleList(counts = newMat), rowData = subtree))
+              }
+              else {
+                return(newMat)
+              }
           })
